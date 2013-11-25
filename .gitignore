@@ -1,5 +1,6 @@
 .DS_Store
-*.aux # LaTeX
-*.log # LaTeX
-*.gz # LaTeX
+*.history
+*.aux
+*.log
+*.gz
 

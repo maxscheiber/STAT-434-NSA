@@ -1,7 +1,10 @@
 from datetime import datetime
+import sys
 
 # consolidated trade data from WRDS
-READ_NAME = 'goog_consolidated.csv'
+COMPANY_NAME = sys.argv[1]
+READ_NAME = COMPANY_NAME + '_consolidated.csv'
+WRITE_NAME = COMPANY_NAME + '_hourly.csv'
 
 f = open(READ_NAME, 'r')
 
@@ -41,7 +44,9 @@ for trade in raw_trades:
 	# We're at a new bucket!
 	if (cur_bucket != tmp_bucket):
 		# Remember, price is in cents!
-		bucket = dict(symbol = symbol, volume = cur_volume, price = cur_price / cur_count, date = cur_date_str, time = cur_hour)
+		# We keep time for ease of filtering. We do not include it in the final output.
+		bucket = dict(symbol = symbol, volume = cur_volume, price = cur_price / cur_count, 
+			date = cur_date_str + " " + str(cur_hour) + ":00:00", time = cur_hour)
 		buckets.append(bucket)
 		cur_bucket = tmp_bucket
 		cur_date_str = date
@@ -61,10 +66,10 @@ for trade in raw_trades:
 adj_buckets = filter(lambda t: t['time'] != 16, buckets)
 
 # Now, to re-convert into a similar, usable CSV
-g = open('goog_hourly.csv', 'w')
-g.write("SYMBOL,DATE,HOUR,PRICE,SIZE\n")
+g = open(WRITE_NAME, 'w')
+g.write("SYMBOL,DATE,PRICE,SIZE\n")
 for bucket in adj_buckets:
 	cents_price_str = str(bucket['price'])
 	dollars_price = cents_price_str[0:len(cents_price_str)-2] + "." + cents_price_str[len(cents_price_str) - 2:]
-	g.write(",".join([bucket['symbol'], bucket['date'], str(bucket['time']), dollars_price, str(bucket['volume'])]))
+	g.write(",".join([bucket['symbol'], bucket['date'], dollars_price, str(bucket['volume'])]))
 	g.write("\n")

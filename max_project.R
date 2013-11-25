@@ -7,9 +7,12 @@ goog.data = read.table("goog_hourly.csv", header=T, sep=",")
 # WARNING: this overwrites the DATE column of the data frame
 goog.data$DATE = strptime(as.character(goog.data$DATE), format="%Y%m%d %H:%M:%S")
 
+# Convert from price to log
+goog.data$RETURNS = c(0, diff(log(goog.data$PRICE)))
+
 # Let us find the variance from May 2013 onward
 # First, we need to determine the initial index to start at
-start_idx = 100
+start_idx = 30
 # which(goog.data$DATE == strptime("20130501 09:00:00", format="%Y%m%d %H:%M:%S"), arr.ind=T)
 
 # Lagged volatility over 100 time deltas up to idx, inclusive.
@@ -23,17 +26,67 @@ volatility = function(data, idx) {
 	return (dist_sum_sqrd / start_idx)
 }
 
-goog.data$vol = seq(0, 1, length(goog.data$PRICE))
+goog.data$VOL = seq(0, 1, length(goog.data$RETURNS))
 
 # Compute volatilities
-for (i in start_idx:length(goog.data$PRICE)) {
-	goog.data$vol[i] = volatility(goog.data$PRICE, i)
+for (i in start_idx:length(goog.data$RETURNS)) {
+	goog.data$VOL[i] = volatility(goog.data$RETURNS, i)
 }
 
 # Let's see those volatilies
-plot(goog.data$DATE, goog.data$vol, type="l", main="Volatility of GOOG", xlab="Date", ylab="Variance (Dollars^2)")
+plot(goog.data$DATE, goog.data$VOL, type="l", main="Volatility of GOOG", xlab="Date", ylab="Variance (Dollars^2)")
 par(new=T)
-plot(goog.data$DATE, goog.data$PRICE, type="l", main="", xlab="", ylab="", col=4, axes="F")
+plot(goog.data$DATE, goog.data$RETURNS, type="l", main="", xlab="", ylab="", col=4, axes="F")
 # throw the volatility scale on the right hand side
-axis(4, pretty(goog.data$PRICE))
+axis(4, pretty(goog.data$RETURNS))
 mtext("Stock Return (Dollars)", side=4)
+
+# zoomed in version of the graph
+window = 650
+
+plot(goog.data$DATE[window:(window+200)], goog.data$VOL[window:(window+200)], type="l", main="Volatility of GOOG", xlab="Date", ylab="Variance (Dollars^2)")
+
+# now, let's consider a basket of four tech stocks
+# First up is GOOG
+goog.data = read.table("goog_hourly.csv", header=T, sep=",")
+goog.data$DATE = strptime(as.character(goog.data$DATE), format="%Y%m%d %H:%M:%S")
+goog.data$RETURNS = c(0, diff(log(goog.data$PRICE)))
+
+# Then AAPL
+aapl.data = read.table("aapl_hourly.csv", header=T, sep=",")
+aapl.data$DATE = strptime(as.character(aapl.data$DATE), format="%Y%m%d %H:%M:%S")
+aapl.data$RETURNS = c(0, diff(log(aapl.data$PRICE)))
+
+# Then MSFT
+msft.data = read.table("msft_hourly.csv", header=T, sep=",")
+msft.data$DATE = strptime(as.character(msft.data$DATE), format="%Y%m%d %H:%M:%S")
+msft.data$RETURNS = c(0, diff(log(msft.data$PRICE)))
+
+# Then FB
+fb.data = read.table("fb_hourly.csv", header=T, sep=",")
+fb.data$DATE = strptime(as.character(fb.data$DATE), format="%Y%m%d %H:%M:%S")
+fb.data$RETURNS = c(0, diff(log(fb.data$PRICE)))
+
+# Let us construct an equal-weighted basket
+basket = aapl.data
+basket$PRICE = 0.25 * (c(goog.data$PRICE, goog.data$PRICE[length(goog.data$PRICE)]) + aapl.data$PRICE + msft.data$PRICE + fb.data$PRICE)
+basket$RETURNS = c(0, diff(log(basket$PRICE)))
+
+# Run basket volatility
+basket$VOL = seq(0, 1, length(basket$RETURNS))
+
+# Compute volatilities
+for (i in start_idx:length(basket$RETURNS)) {
+	basket$VOL[i] = volatility(basket$RETURNS, i)
+}
+
+plot(basket$DATE, basket$VOL, type="l", main="Volatility of Tech Basket", xlab="Date", ylab="Variance (Dollars^2)")
+par(new=T)
+plot(basket$DATE, basket$RETURNS, type="l", main="", xlab="", ylab="", col=4, axes="F")
+# throw the volatility scale on the right hand side
+axis(4, pretty(basket$RETURNS))
+mtext("Basket Return (%)", side=4)
+
+window = 800
+
+plot(basket$DATE[window:(window+200)], basket$VOL[window:(window+200)], type="l", main="Volatility of Tech Basket", xlab="Date", ylab="Variance (%)")
