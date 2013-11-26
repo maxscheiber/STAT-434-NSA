@@ -33,8 +33,13 @@ for (i in start_idx:length(goog.data$RETURNS)) {
 	goog.data$VOL[i] = volatility(goog.data$RETURNS, i)
 }
 
+# Volatility over June
+which(goog.data$DATE == strptime("20130603 09:00:00", format="%Y%m%d %H:%M:%S"), arr.ind=T) # 729
+which(goog.data$DATE == strptime("20130701 09:00:00", format="%Y%m%d %H:%M:%S"), arr.ind=T) # 869
+plot(goog.data$DATE[729:869], goog.data$VOL[729:869], type="l", main="Volatility of GOOG in June 2013", xlab="Date", ylab="Variance")
+
 # Let's see those volatilies
-plot(goog.data$DATE, goog.data$VOL, type="l", main="Volatility of GOOG", xlab="Date", ylab="Variance (Dollars^2)")
+plot(goog.data$DATE, goog.data$VOL, type="l", main="Volatility of GOOG", xlab="Date", ylab="Variance")
 par(new=T)
 plot(goog.data$DATE, goog.data$RETURNS, type="l", main="", xlab="", ylab="", col=4, axes="F")
 # throw the volatility scale on the right hand side
@@ -70,6 +75,7 @@ fb.data$RETURNS = c(0, diff(log(fb.data$PRICE)))
 # Let us construct an equal-weighted basket
 basket = aapl.data
 basket$PRICE = 0.25 * (c(goog.data$PRICE, goog.data$PRICE[length(goog.data$PRICE)]) + aapl.data$PRICE + msft.data$PRICE + fb.data$PRICE)
+basket$SIZE = 0.25 * (c(goog.data$SIZE, goog.data$SIZE[length(goog.data$SIZE)]) + aapl.data$SIZE + msft.data$SIZE + fb.data$SIZE)
 basket$RETURNS = c(0, diff(log(basket$PRICE)))
 
 # Run basket volatility
@@ -90,3 +96,6 @@ mtext("Basket Return (%)", side=4)
 window = 800
 
 plot(basket$DATE[window:(window+200)], basket$VOL[window:(window+200)], type="l", main="Volatility of Tech Basket", xlab="Date", ylab="Variance (%)")
+
+# Was there an upturn in trading volume? Absolutely not!
+plot(basket$DATE, basket$SIZE, type="l", main="Hourly Volume of Trade", xlab="Date", ylab="Volume (mean number of shares)")
