@@ -1,5 +1,5 @@
-#####
-Import the data, convert to time series, plot the data
+######
+#Import the data, convert to time series, plot the data
 #####
 
 #read data
@@ -56,6 +56,7 @@ summary(arch8.full)
 ## Check GARCH(1,1) shows that there is heteroskedasticity
 spec = ugarchspec()
 garch1.fit = ugarchfit(spec,basket$RETURNS)
+garch1.fit
 
 
 
@@ -123,9 +124,9 @@ garch1.june = ugarchfit(data = ret.june, spec=spec)
 newsimpact.june = newsimpact(garch1.june)
 plot(newsimpact$zx, newsimpact$zy, main = "News Impact Curve for June Basket Returns", xlab="Standarized Lagged Shocks", ylab = "Conditional Variance",type='l')
 
-## GARCH(1,1) alternative fit for June, suggests heteroskedasticity
+## GARCH(1,1) alternative fit for June also suggests heteroskedasticity
 require(fGarch)
-garch1.june.v2 = garchFit(formula = ~garch(1,1), data = ret.june)
+garch1.june.v2 = garchFit(formula = ~garch(1,1), data = ret[730:868])
 summary(garch1.june.v2)
 
 ## June doesn't seem a like a particularly volatile month
@@ -190,15 +191,13 @@ plot(basket$DATE[868:1021], aapl.ret[868:1021]^2,axes=F,ylab="",xlab="",col = 'o
 # Like June, doesn't seem particularly volatile
 plot(vol.july,type = 'l', ylim=c(min(vol.july),max(vol.july)),ylab="Basket Returns", main="July Returns vs 3 Random Months")
 par(new=T)
-plot(vol[300:440],type = 'l',col='red', lty=3, ylim=c(min(vol.june),max(vol.june)),axes = F,ylab="")
+plot(vol[300:440],type = 'l',col='red', lty=3, ylim=c(min(vol.july),max(vol.july)),axes = F,ylab="")
 par(new=T)
-plot(vol[440:580],type = 'l',col='blue', lty=3, ylim=c(min(vol.june),max(vol.june)), axes = F,ylab="")
+plot(vol[440:580],type = 'l',col='blue', lty=3, ylim=c(min(vol.july),max(vol.july)), axes = F,ylab="")
 par(new=T)
-plot(vol[100:240],type = 'l',col='green', lty=3, ylim=c(min(vol.june),max(vol.june)),ylab="",axes=F)
+plot(vol[100:240],type = 'l',col='green', lty=3, ylim=c(min(vol.june),max(vol.july)),ylab="",axes=F)
 
 # Let's look at volatility from May - end of July
 plot(basket$DATE[576:1021], vol[576:1021],type = 'l', ylim=c(min(vol.june),max(vol.june)),ylab="Basket Returns", main="Plot of volatility from May - End of July")
-
-
 
 
