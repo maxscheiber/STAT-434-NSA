@@ -103,15 +103,38 @@ While this initially seeming promising, it is worth noting that all of our compa
 
 \includegraphics[scale=0.5]{july_earnings.pdf} \\
 
-Finally, we can note that July volatility was not particularly large relative to other months in 2013. A plot comparing July volatility to the volatility in 3 random months is shown below. The results here are similar to those of June: even if there is a story to tell, it is not particularly significant in the grand scheme of things. \\
+Finally, we can note that July volatility was not particularly large relative to other months in 2013. A plot comparing July volatility to the volatility in 3 random months is shown below. The results here are similar to those of June: even if the NSA leaks did have an effect, it was so small that it was hardly worth noticing. \\
 
  \includegraphics[scale=0.5]{july_3_months.pdf} \\
 
 \newpage
+\section{Volume}
+
+So far, our volatility analysis hasn't worked out very well - we have just one probable date: June 20th. Now, let's look at another measure of market interest - volume.  \\
+
+Let's take a look at volume for our entire data set, with June - end of July highlighted. Overall, we're seeing a lot of fluctuations in volume across the board, but our window from June - end of July looks particularly volatile. 
+
+\includegraphics[scale=0.7]{june_july_volume.pdf} \\
+
+\newpage
+
+Let's start by taking a look at June in particular, we notice that somewhere around June 20th has large spike in volume. Below is a plot of June voume (black) and volatility (red) - clearly there's a large correlation between the two. This confirms our hypothesis that June 20th may have been very important for the market - at least in the ultra short horizon of a day or two in June. \\
+
+\includegraphics[scale=0.5]{june_volume_volatility.pdf} \\
+
+\newpage
+
+Now let's take a look at July. Overall, it looks like June 15th - 30th has a lot of volatiltiy in the volume. These results are similar to those we found for the volatility in the returns and are likely linked to the earnings reports for the respective companies, not an NSA leak. \\
+
+In particular, Google and Microsft had their reports on the 18th, while Facebook and Apple had theirs on the 24th. \\
+
+\includegraphics[scale = 0.5]{july_volume.pdf} \\
+
+
+\newpage
 \section{To come}
 
-Since last time, we've made progress on an analysis of volume and are working on combining this with the rest of our results. Similarly, a news impact curve for June has been constructed, and we are considering how to best include this in our story. \\
+At this point we've rejected all dates except June 20th. We'll need to determine whether the spike in volatility/volume on the 20th was due to an NSA leak or some other event.  \\
 
-Overall, we have concluded that there is little evidence that the NSA leaks had an effect on the volatility of the companies our basket. The only date left to seriously consider is June 20th.\\
 
 \end{document}  
