@@ -1,6 +1,6 @@
-######
-#Import the data, convert to time series, plot the data
-#####
+#######
+##Import the data, convert to time series, plot the data
+#######
 
 ## Read in the data + set some date variables
 setwd("Documents/STAT434/nsa")
@@ -90,7 +90,6 @@ basket$RETURNS = c(0, diff(log(basket$PRICE)))
 # Run basket volatility
 basket$VOL = seq(0, 1, length(basket$RETURNS))
 
-# Compute volatilities
 for (i in start_idx:length(basket$RETURNS)) {
 	basket$VOL[i] = volatility(basket$RETURNS, i)
 }
@@ -145,8 +144,11 @@ plot(basket$DATE[window:(window+200)], basket$VOL[window:(window+200)], type="l"
 # Heteroskedasticity + ARCH/GARCH models for whole data set
 #########
 
-# Let's make a new date variable to make our plots sexier
+# Let's make a new date variable to make our plots NICER
 plotdate2 = as.character(basket$DATE)
+plotdate3 = strsplit(s, split = "2013-")
+plotdate4 = unlist(plotdate3)
+plotdate.final = as.Date(plotdate4, format = ("%m-%d"))
 plotdate = as.Date(plotdate2, format = ("%Y-%m-%d"))
 
 
@@ -170,14 +172,16 @@ axis(1, at=150:length(vol), labels = plotdate[150:1022], tck = 0)
 rect(JUNE,0,AUGUST,max(basket$RETURNS^2), col = rgb(0,1,0,0.2))
 
 
-## Check an ARCH(1) suggests that there is no heteroskedasticity :(
+## Check an ARCH(1) suggests homoskedasticity
 require(tseries)
 arch1.full = garch(basket$RETURNS, order = c(0,1))
 summary(arch1.full)
 
+
 ## ARCH(8) suggests heteroskedasticity emerging from the 6th and 7th lags of shocks
 arch8.full = garch(basket$RETURNS, order = c(0,8))
 summary(arch8.full)
+
 
 ## GARCH(1,1), which is basically an infinite order ARCH, shows that there is heteroskedasticity
 spec = ugarchspec()
@@ -194,9 +198,10 @@ garch1.fit
 ret = basket$RETURNS
 vol=basket$VOL
 
-vol.june = vol[728:868]
-ret.june = ret[728:868]
+vol.june = vol[JUNE]:JULY]
+ret.june = ret[JUNE:JULY]
 dates.june = basket$DATE[728:868]
+plotdate.june = plotdate[JUNE:JULY]
 
 ## Plot June squared returns - a proxy for volatility
 ## Looks like there may be some extra volatility towards 
@@ -210,7 +215,7 @@ axis(1, at=1:length(vol.june), labels = plotdate.june, tck = 0)
 plot(vol.june, type='l', main = "June Volatility", ylab= 'Volatility', xlab = 'Date', xaxt='n')
 axis(1, at=1:length(vol.june), labels = plotdate.june, tck = 0)
 
-## ARCH(1) for June suggests no heteroskedasticity, but that seems to contradict the plots above
+## ARCH(1) for June suggests no heteroskedasticity
 arch1.june = garch(ret.june, order = c(0,1))
 summary(arch1.june)
 
@@ -220,7 +225,7 @@ spec = ugarchspec()
 garch1.june = ugarchfit(data = ret.june, spec=spec)
 
 
-## GARCH(1,1) using a different GARCH package for June also suggests heteroskedasticity
+## GARCH(1,1) using a different GARCH package also suggests heteroskedasticity
 require(fGarch)
 garch1.june.v2 = garchFit(formula = ~garch(1,1), data = ret[730:868])
 summary(garch1.june.v2)
@@ -240,22 +245,35 @@ indic.june6[750:763] = 1
 indic.june20 = basket$RETURNS * 0
 indic.june20[820:833] = 1
 
-## Regression of June 6th indicator on full basket data
-## is not significant
+## Regression of June 6th indicator on full basket vol
+## is not significant (using MA volatility)
 vol.full.june6 = lm(vol ~ indic.june6)
 summary(vol.full.june6)
+
+## Regression of June 6th indicator on full basket returns squared
+## is not significant
+vol.full.june6.retsq = lm(ret^2 ~ indic.june6)
+summary(vol.full.june6.retsq)
 
 ## Regression of June 20th indicator on full basket data
 ## is not significant
 vol.full.june20 = lm(vol ~ indic.june20)
 summary(vol.full.june20)
 
+## Regression of June 20th indicator on full basket returns squared
+## is not significant
+vol.full.june20.retsq = lm(ret^2 ~ indic.june20)
+summary(vol.full.june20.retsq)
+
+
+### The above results suggest that June 6th/20th were not not huge dates for the year of 2013.
+
 ## Regression of June 6th indicator on June basket data
-## not significant (this is using our MA volatility)
+## not significant (using MA volatility)
 june.june6 = lm (vol.june ~ indic.june6[JUNE:JULY])
 summary(june.june6)
 
-## Regression of June 6 indicator on June basket data, using returns-squared is not significant
+## Regression of June 6 indicator on June basket returns-squared is not significant
 june.june6.retsq = lm (ret[JUNE:JULY]^2 ~ indic.june6[JUNE:JULY])
 summary(june.june6.retsq)
 
@@ -269,18 +287,51 @@ summary(june.june20)
 june.june20.retsq = lm (ret[JUNE:JULY]^2 ~ indic.june20[JUNE:JULY])
 summary(june.june20.retsq)
 
+## Was there a regime change post-20th through the rest of June?
+## Dummy that is 0 before June 20th, 1 after (until the end of june) - NO EFFECT!
+regime.june20 = vol * 0
+regime.june20[820:JULY] = 1
+regime.june20.vol.reg = lm (vol ~ regime.june20)
+summary(regime.june20.vol.reg)
+
+## Let's check from June 20th - July 11th - significant with the vol model
+regime.june20.july20 = vol * 0
+regime.june20.july20[820:920] = 1
+regime.june20.july20.reg = lm (vol ~ regime.june20.july20)
+summary(regime.june20.july20.reg)
+
+## how about with the returns-squared model? Not significant! 
+regime.june20.july20.reg.retsq = lm (ret^2 ~ regime.june20.july20)
+summary(regime.june20.july20.reg.retsq)
+
+## Regime-change post june 6? Also not significant :)
+regime.june6 = vol * 0
+regime.june6[750:JULY] = 1
+regime.june6.vol.reg = lm (vol ~ regime.june6)
+summary(regime.june6.vol.reg)
 
 ## Regression of June 20th indicator on June + July is not significant (using MA vol)
 june20.indic.endofjuly = lm(vol[JUNE:AUGUST] ~ indic.june20[JUNE:AUGUST])
 summary(june20.indic.endofjuly)
 
-Regression of June 20th indicator on June + July is not significant (returns-squared)
+## Regression of June 20th indicator on June + July is not significant (returns-squared)
 june20.indic.endofjuly.retsq = lm(ret[JUNE:AUGUST]^2 ~ indic.june20[JUNE:AUGUST])
 summary(june20.indic.endofjuly.retsq)
 
 ## Regression of both June 20th + June 6th indicators on June basket data - only the 20th is significant
 june.june6and20 = lm (vol.june ~ indic.june6[728:868] +  indic.june20[728:868])
 summary(june.june6and20)
+
+## Let's do CUSUM for June
+require(strucchange)
+cusum.june.vol = efp(vol.june ~ 1, type = "OLS-CUSUM")
+cusum.june.retsq = efp(ret.june^2 ~ 1, type = "OLS-CUSUM")
+
+plot(cusum.june.vol, main= "Cumulative Sum of Recursive Residuals - June Volatility",xaxt='n',xlab='', xlim = c(0,1))
+
+plot(cusum.june.retsq, xlab="Dates", main= "Cumulative Sum of Recursive Residuals - June Volatility")
+
+
 
 
 ## June doesn't seem a like a particularly volatile month
@@ -392,7 +443,6 @@ rect(JUNE,min(basket$SIZE),AUGUST,max(basket$SIZE), col = rgb(0,1,0,0.2))
 
 plot(basket$SIZE[JUNE:JULY], type="l", main="Hourly Volume of Trade in June", xlab="Date", ylab="Volume (mean number of shares)", xaxt= 'n')
 
-plotdate.june = plotdate[JUNE:JULY]
 axis(1, at=1:length(basket$SIZE[JUNE:JULY]), labels = plotdate.june, tck = 0)
 
 par(new = T)
